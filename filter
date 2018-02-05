@@ -1,0 +1,31 @@
+function bd_sale_price_html( $price, $product ) {
+$html = '';
+if ( $product->get_type() == 'variable' ) {
+$prices = $product->get_variation_prices(true);
+if (empty($prices['price'])) {
+return $html;
+}
+foreach ($prices['price'] as $pid => $old_price) {
+$pobj = wc_get_product($pid);
+$prices['price'][$pid] = wc_get_price_to_display($pobj);
+}
+asort($prices['price']);
+$sale_min = current($prices['price']);
+$sale_max = end($prices['price']);
+asort($prices['regular_price']);
+$regular_min = current($prices['regular_price']);
+$regular_max = end($prices['regular_price']);
+if ( $regular_min > 0 && $regular_max > 0 ) {
+$perc_min = round( 100 - ( (100 / $regular_min) * $sale_min ) );
+$perc_max = round( 100 - ( (100 / $regular_max) * $sale_max ) );
+$html = '<span>(' . ( ( $perc_min != $perc_max ) ? ( $perc_min . '-' . $perc_max ) : $perc_max ) . '% Off)</span>';
+}
+}
+if ( $product->is_on_sale() ) :
+$return_string = str_replace( '</ins>', '</ins> '.$html, $price);
+return $return_string;
+else :
+return $price;
+endif;
+}
+add_filter( 'woocommerce_get_price_html', 'bd_sale_price_html', 100, 2 );
